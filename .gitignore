@@ -1,0 +1,22 @@
+# Build binaries and object files
+bin/
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.out
+
+# Data files (large inputs/outputs)
+data/input/*.bin
+data/output/*.bin
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE & OS files
+.vscode/
+.vs/
+Thumbs.db
+Desktop.ini
