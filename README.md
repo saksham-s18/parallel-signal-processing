@@ -212,7 +212,23 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1 -Target opt
 
 ---
 
-## Performance Comparison & Benchmark Results (Step 6)
+## Performance Summary
+
+The table below summarizes measured execution times and speedups relative to the sequential baseline across all four implementations:
+
+| Implementation | Small ($N=10\text{k}, W=15$) | Medium ($N=100\text{k}, W=31$) | Large ($N=1\text{M}, W=63$) | Large Speedup vs Seq | Correctness Status |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| **Sequential Baseline** | 0.1290 ms | 1.6540 ms | 39.5710 ms | 1.00x | REFERENCE |
+| **OpenMP (8 Threads)** | 0.0870 ms | 0.5650 ms | 6.9710 ms | 5.68x | PASSED |
+| **OpenMP (24 Threads)** | 0.3120 ms *(0.41x)* | 0.4160 ms | 5.7330 ms | 6.90x | PASSED |
+| **CUDA Baseline** | 0.0579 ms *(2.23x)* | 0.2976 ms *(5.56x)* | 3.0540 ms *(12.96x)* | 12.96x E2E *(23.75x Kernel)* | PASSED |
+| **CUDA Optimized (Shared Mem)** | 0.1327 ms *(0.97x)* | 0.3258 ms *(5.08x)* | **2.8489 ms** *(13.89x)* | **13.89x E2E** *(**25.05x Kernel**)* | PASSED |
+
+> For comprehensive architectural analysis, thread scalability curves, PCIe transfer breakdowns, and full benchmark tables, refer to the [Final Technical Report](file:///c:/Users/Predator/Desktop/Signal%20Processing/report/report.md).
+
+---
+
+## Detailed Benchmark Results
 
 ### 1. Full Benchmark Comparison Table (Measured on Target Hardware)
 
@@ -268,7 +284,7 @@ Generated plots are located in [`results/plots/`](file:///c:/Users/Predator/Desk
 - `cuda_breakdown.png`
 - `signal_denoising_demo.png`
 
-Full report materials with placeholders for submission are located in [`report/report_material.md`](file:///c:/Users/Predator/Desktop/Signal%20Processing/report/report_material.md).
+Detailed technical report and complete submission documentation are located in [report/report.md](file:///c:/Users/Predator/Desktop/Signal%20Processing/report/report.md).
 
 ---
 
