@@ -1,6 +1,6 @@
 # PowerShell Build Script for Signal Processing Moving-Average Project
 param (
-    [string]$Target = "all", # options: all, seq, omp, clean
+    [string]$Target = "all", # options: all, seq, omp, cuda, opt, clean
     [string]$Config = "Release"
 )
 
@@ -15,6 +15,23 @@ if ($Config -eq "Release") {
 # Ensure bin directory exists
 if (-not (Test-Path "bin")) {
     New-Item -ItemType Directory -Path "bin" | Out-Null
+}
+
+# Locate vcvars64.bat for MSVC host compiler needed by nvcc
+function Get-VcvarsPath {
+    $standardPath = "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+    if (Test-Path $standardPath) {
+        return $standardPath
+    }
+    $vswhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswhere) {
+        $installPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+        if ($installPath) {
+            $found = Join-Path $installPath "VC\Auxiliary\Build\vcvars64.bat"
+            if (Test-Path $found) { return $found }
+        }
+    }
+    return $null
 }
 
 function Build-Sequential {
@@ -53,6 +70,46 @@ function Build-OpenMP {
     }
 }
 
+function Build-CUDA {
+    Write-Host "Compiling Baseline CUDA Implementation..." -ForegroundColor Cyan
+    if ((Test-Path "src/cuda/main_cuda.cu") -and (Test-Path "src/cuda/moving_average_cuda.cu")) {
+        $vcvars = Get-VcvarsPath
+        $cmd = if ($vcvars) {
+            "call `"$vcvars`" && nvcc -arch=sm_89 -O3 -I./include src/cuda/moving_average_cuda.cu src/cuda/main_cuda.cu src/sequential/moving_average_seq.cpp -o bin/moving_average_cuda.exe"
+        } else {
+            "nvcc -arch=sm_89 -O3 -I./include src/cuda/moving_average_cuda.cu src/cuda/main_cuda.cu src/sequential/moving_average_seq.cpp -o bin/moving_average_cuda.exe"
+        }
+        cmd.exe /c $cmd
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Built bin/moving_average_cuda.exe successfully." -ForegroundColor Green
+        } else {
+            Write-Host "CUDA build failed." -ForegroundColor Red
+        }
+    } else {
+        Write-Host "CUDA source files not found." -ForegroundColor Yellow
+    }
+}
+
+function Build-Optimized {
+    Write-Host "Compiling Shared-Memory Optimized CUDA Implementation..." -ForegroundColor Cyan
+    if ((Test-Path "src/optimized/main_opt.cu") -and (Test-Path "src/optimized/moving_average_opt.cu")) {
+        $vcvars = Get-VcvarsPath
+        $cmd = if ($vcvars) {
+            "call `"$vcvars`" && nvcc -arch=sm_89 -O3 -I./include src/optimized/moving_average_opt.cu src/optimized/main_opt.cu src/sequential/moving_average_seq.cpp -o bin/moving_average_opt.exe"
+        } else {
+            "nvcc -arch=sm_89 -O3 -I./include src/optimized/moving_average_opt.cu src/optimized/main_opt.cu src/sequential/moving_average_seq.cpp -o bin/moving_average_opt.exe"
+        }
+        cmd.exe /c $cmd
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Built bin/moving_average_opt.exe successfully." -ForegroundColor Green
+        } else {
+            Write-Host "Optimized CUDA build failed." -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Optimized CUDA source files not found." -ForegroundColor Yellow
+    }
+}
+
 function Clean-Build {
     Write-Host "Cleaning build artifacts..." -ForegroundColor Cyan
     if (Test-Path "bin") {
@@ -64,10 +121,14 @@ function Clean-Build {
 switch ($Target) {
     "seq"   { Build-Sequential }
     "omp"   { Build-OpenMP }
+    "cuda"  { Build-CUDA }
+    "opt"   { Build-Optimized }
     "clean" { Clean-Build }
     "all"   { 
         Build-Sequential
         Build-OpenMP
+        Build-CUDA
+        Build-Optimized
     }
     default { Write-Host "Unknown target: $Target" -ForegroundColor Red }
 }

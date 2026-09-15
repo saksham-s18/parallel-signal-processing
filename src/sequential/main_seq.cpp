@@ -179,7 +179,9 @@ int main(int argc, char* argv[]) {
     size_t n = 100000;
     int windowSize = 15;
     unsigned int seed = 42;
+    int repetitions = 5;
     std::string savePath = "";
+    std::string loadInputPath = "";
     bool runTests = false;
 
     // Parse CLI options
@@ -191,6 +193,10 @@ int main(int argc, char* argv[]) {
             windowSize = std::atoi(argv[++i]);
         } else if ((arg == "-s" || arg == "--seed") && i + 1 < argc) {
             seed = static_cast<unsigned int>(std::atoi(argv[++i]));
+        } else if ((arg == "-r" || arg == "--runs") && i + 1 < argc) {
+            repetitions = std::atoi(argv[++i]);
+        } else if ((arg == "--load") && i + 1 < argc) {
+            loadInputPath = argv[++i];
         } else if ((arg == "--save") && i + 1 < argc) {
             savePath = argv[++i];
         } else if (arg == "--test") {
@@ -201,6 +207,8 @@ int main(int argc, char* argv[]) {
                       << "  -n, --size <N>       Signal size (default: 100000)\n"
                       << "  -w, --window <W>     Moving-average window size (must be odd, default: 15)\n"
                       << "  -s, --seed <S>       Random seed for signal generator (default: 42)\n"
+                      << "  -r, --runs <R>       Number of benchmark repetitions (default: 5)\n"
+                      << "  --load <path>        Path to load binary input signal\n"
                       << "  --save <path>        Path to save output binary signal\n"
                       << "  --test               Run built-in verification test suite\n"
                       << "  -h, --help           Display this help message\n";
@@ -222,26 +230,50 @@ int main(int argc, char* argv[]) {
     std::cout << "  Random Seed      : " << seed << "\n";
     std::cout << "  Boundary Mode    : Edge Replication (Clamping)\n";
     std::cout << "  Algorithm        : Naive O(N*W) Sequential Baseline\n";
+    std::cout << "  Repetitions      : " << repetitions << " runs (1 warm-up discarded)\n";
     std::cout << "---------------------------------------------------------\n";
 
-    // 1. Generate Input Signal (Deterministic noisy sine wave)
-    std::cout << "Generating input signal..." << std::flush;
-    std::vector<SampleType> inputSignal = SignalGenerator::generateNoisySine(n, 1000.0f, 5.0f, 0.5f, seed);
-    std::cout << " Done.\n";
+    // 1. Prepare Input Signal
+    std::vector<SampleType> inputSignal;
+    if (!loadInputPath.empty()) {
+        std::cout << "Loading input signal from: " << loadInputPath << " ... " << std::flush;
+        if (!SignalGenerator::loadBinary(loadInputPath, inputSignal)) {
+            std::cerr << "Failed to load input.\n";
+            return 1;
+        }
+        n = inputSignal.size();
+        std::cout << " Done (" << n << " samples).\n";
+    } else {
+        std::cout << "Generating input signal..." << std::flush;
+        inputSignal = SignalGenerator::generateNoisySine(n, 1000.0f, 5.0f, 0.5f, seed);
+        std::cout << " Done.\n";
+    }
 
     // 2. Perform Moving-Average Filter Computation (TIMED ISOLATED COMPUTATION)
     std::vector<SampleType> outputSignal;
     std::string errorMsg;
-    Timer filterTimer;
+    double totalMs = 0.0;
 
-    filterTimer.start();
-    bool success = movingAverageSequential(inputSignal, outputSignal, windowSize, &errorMsg);
-    double elapsedMs = filterTimer.stop();
+    for (int run = 0; run < repetitions; ++run) {
+        std::vector<SampleType> tmpOutput;
+        Timer filterTimer;
+        filterTimer.start();
+        bool success = movingAverageSequential(inputSignal, tmpOutput, windowSize, &errorMsg);
+        double ms = filterTimer.stop();
 
-    if (!success) {
-        std::cerr << "\n[Error] Moving-average filtering failed: " << errorMsg << "\n";
-        return 1;
+        if (!success) {
+            std::cerr << "\n[Error] Moving-average filtering failed: " << errorMsg << "\n";
+            return 1;
+        }
+
+        if (run == 0) {
+            outputSignal = std::move(tmpOutput); // warm-up
+        } else {
+            totalMs += ms;
+        }
     }
+
+    double elapsedMs = (repetitions > 1) ? (totalMs / (repetitions - 1)) : totalMs;
 
     // 3. Print Performance and Results
     std::cout << "\n>>> Sequential filter time: " << std::fixed << std::setprecision(3) 

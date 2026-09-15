@@ -1,0 +1,7 @@
+Implementation,Input Size,N,Window,H2D (ms),Kernel (ms),D2H (ms),End-to-End (ms),Transfer Ratio (%),Kernel Speedup,End-to-End Speedup
+CUDA Baseline,Small,10000,15,0.0161,0.0164,0.0254,0.0579,71.7%,7.87x,2.23x
+CUDA Optimized,Small,10000,15,0.0390,0.0340,0.0598,0.1327,74.5%,3.79x,0.97x
+CUDA Baseline,Medium,100000,31,0.0773,0.1039,0.1164,0.2976,65.1%,15.92x,5.56x
+CUDA Optimized,Medium,100000,31,0.0915,0.1059,0.1284,0.3258,67.5%,15.62x,5.08x
+CUDA Baseline,Large,1000000,63,0.6565,1.6661,0.7314,3.0540,45.4%,23.75x,12.96x
+CUDA Optimized,Large,1000000,63,0.5723,1.5797,0.6970,2.8489,44.6%,25.05x,13.89x

@@ -263,8 +263,10 @@ int main(int argc, char* argv[]) {
     unsigned int seed = 42;
     int numThreads = 0; // 0 means default to max threads
     std::string savePath = "";
+    std::string loadInputPath = "";
     bool runTests = false;
     bool runBenchmark = false;
+    int repetitions = 5;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -276,6 +278,10 @@ int main(int argc, char* argv[]) {
             seed = static_cast<unsigned int>(std::atoi(argv[++i]));
         } else if ((arg == "-t" || arg == "--threads") && i + 1 < argc) {
             numThreads = std::atoi(argv[++i]);
+        } else if ((arg == "-r" || arg == "--runs") && i + 1 < argc) {
+            repetitions = std::atoi(argv[++i]);
+        } else if ((arg == "--load") && i + 1 < argc) {
+            loadInputPath = argv[++i];
         } else if ((arg == "--save") && i + 1 < argc) {
             savePath = argv[++i];
         } else if (arg == "--test") {
@@ -289,6 +295,8 @@ int main(int argc, char* argv[]) {
                       << "  -w, --window <W>     Moving-average window size (must be odd, default: 15)\n"
                       << "  -s, --seed <S>       Random seed for signal generator (default: 42)\n"
                       << "  -t, --threads <T>    Number of OpenMP threads (default: max available)\n"
+                      << "  -r, --runs <R>       Number of benchmark repetitions (default: 5)\n"
+                      << "  --load <path>        Path to load binary input signal\n"
                       << "  --test               Run built-in correctness test suite\n"
                       << "  --benchmark          Run full thread-scaling benchmark (N=1M, W=31, T=1..24)\n"
                       << "  --save <path>        Path to save output binary signal\n"
@@ -320,12 +328,24 @@ int main(int argc, char* argv[]) {
     std::cout << "  Random Seed      : " << seed << "\n";
     std::cout << "  Threads Selected : " << actualThreads << " (of " << omp_get_max_threads() << " logical cores)\n";
     std::cout << "  Scheduling       : schedule(static)\n";
+    std::cout << "  Repetitions      : " << repetitions << " runs (1 warm-up discarded)\n";
     std::cout << "---------------------------------------------------------\n";
 
-    // 1. Generate Input Signal
-    std::cout << "Generating input signal..." << std::flush;
-    std::vector<SampleType> inputSignal = SignalGenerator::generateNoisySine(n, 1000.0f, 5.0f, 0.5f, seed);
-    std::cout << " Done.\n";
+    // 1. Prepare Input Signal
+    std::vector<SampleType> inputSignal;
+    if (!loadInputPath.empty()) {
+        std::cout << "Loading input signal from: " << loadInputPath << " ... " << std::flush;
+        if (!SignalGenerator::loadBinary(loadInputPath, inputSignal)) {
+            std::cerr << "Failed to load input.\n";
+            return 1;
+        }
+        n = inputSignal.size();
+        std::cout << " Done (" << n << " samples).\n";
+    } else {
+        std::cout << "Generating input signal..." << std::flush;
+        inputSignal = SignalGenerator::generateNoisySine(n, 1000.0f, 5.0f, 0.5f, seed);
+        std::cout << " Done.\n";
+    }
 
     // 2. Sequential Reference Run for Validation
     std::cout << "Running sequential reference baseline for validation..." << std::flush;
@@ -339,15 +359,28 @@ int main(int argc, char* argv[]) {
 
     // 3. OpenMP Parallel Run (TIMED ISOLATED COMPUTATION)
     std::vector<SampleType> ompOutput;
-    Timer ompTimer;
-    ompTimer.start();
-    bool success = movingAverageOpenMP(inputSignal, ompOutput, windowSize, actualThreads, &err);
-    double ompMs = ompTimer.stop();
+    double totalOmpMs = 0.0;
 
-    if (!success) {
-        std::cerr << "\n[Error] OpenMP filtering failed: " << err << "\n";
-        return 1;
+    for (int run = 0; run < repetitions; ++run) {
+        std::vector<SampleType> tmpOutput;
+        Timer ompTimer;
+        ompTimer.start();
+        bool success = movingAverageOpenMP(inputSignal, tmpOutput, windowSize, actualThreads, &err);
+        double ms = ompTimer.stop();
+
+        if (!success) {
+            std::cerr << "\n[Error] OpenMP filtering failed: " << err << "\n";
+            return 1;
+        }
+
+        if (run == 0) {
+            ompOutput = std::move(tmpOutput); // warm-up
+        } else {
+            totalOmpMs += ms;
+        }
     }
+
+    double ompMs = (repetitions > 1) ? (totalOmpMs / (repetitions - 1)) : totalOmpMs;
 
     // 4. Report Performance and Metrics
     std::cout << "\n>>> OpenMP filter time: " << std::fixed << std::setprecision(3) 

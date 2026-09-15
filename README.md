@@ -158,14 +158,129 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1 -Target all
 
 ---
 
+## Baseline CUDA GPU Implementation (Step 4)
+
+### 1. GPU Architecture & Mapping
+The baseline CUDA implementation ([`src/cuda/`](file:///c:/Users/Predator/Desktop/Signal%20Processing/src/cuda)) maps the moving-average filter onto thousands of concurrent GPU threads:
+- **Thread Mapping:** Each thread computes exactly one output element:
+  $$i = \text{blockIdx.x} \times \text{blockDim.x} + \text{threadIdx.x}$$
+- **Block Size:** $B = 256$ threads per block.
+- **Grid Size:** $\lceil N / 256 \rceil$ blocks.
+- **Memory Access:** Each thread loads $W$ elements directly from high-latency GPU global memory (DRAM).
+- **Error Checking:** Every CUDA API call (`cudaMalloc`, `cudaMemcpy`, kernel launch, event recording) is wrapped in strict error-handling macros (`CUDA_CHECK`).
+- **Timing:** Dedicated CUDA events (`cudaEventRecord`, `cudaEventElapsedTime`) measure Host-to-Device ($H2D$), Kernel Execution, and Device-to-Host ($D2H$) times separately with microsecond resolution.
+
+### 2. How to Build & Run CUDA Baseline
+```powershell
+# Build CUDA baseline
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Target cuda
+
+# Run built-in correctness verification suite
+.\bin\moving_average_cuda.exe --test
+
+# Run safe initial performance test (N = 10,000, W = 15)
+.\bin\moving_average_cuda.exe --initial-test
+
+# Run on custom workload
+.\bin\moving_average_cuda.exe -n 100000 -w 31 -b 256
+```
+
+---
+
+## Shared-Memory Optimized CUDA Implementation (Step 5)
+
+### 1. Shared-Memory Tiling with Halo Cells
+The optimized CUDA implementation ([`src/optimized/`](file:///c:/Users/Predator/Desktop/Signal%20Processing/src/optimized)) exploits on-chip SRAM (Shared Memory) to eliminate redundant global memory fetches:
+- **Contiguous Tile Processing:** Each block processes an output tile of size $B = \text{blockDim.x} = 256$.
+- **Halo Loading:** Each block cooperatively loads $B + 2k$ elements into `extern __shared__ SampleType s_data[]`, where $k = (W - 1) / 2$ represents the left and right halo cells.
+- **Theoretical Load-Count Reduction:** Global memory read instructions decrease from $B \times W$ to $B + 2k$ per block (a theoretical $\approx 50.7\times$ instruction reduction for $W=63$, while actual hardware DRAM traffic depends on cache hit rates).
+- **Barrier Synchronization:** `__syncthreads()` guarantees all halo and tile elements are resident before computation starts.
+- **Shared-Memory Bank Access:** Stencil access `s_data[tid + j]` accesses consecutive 32-bit banks across warp threads, resulting in conflict-free access during the inner compute loop.
+- **Accurate Divergence Characterization:** Boundary clamping branches occur only in the first and terminal blocks of the grid during the cooperative load phase; interior blocks and the stencil computation loop execute branch-free.
+
+### 2. How to Build & Run Optimized CUDA
+```powershell
+# Build optimized CUDA implementation
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Target opt
+
+# Run built-in correctness verification suite
+.\bin\moving_average_opt.exe --test
+
+# Run on custom workload
+.\bin\moving_average_opt.exe -n 1000000 -w 63 -b 256
+```
+
+---
+
+## Performance Comparison & Benchmark Results (Step 6)
+
+### 1. Full Benchmark Comparison Table (Measured on Target Hardware)
+
+| Implementation | Workload Size | $N$ | Window $W$ | Threads / Block | Kernel Time (ms) | End-to-End Time (ms) | Speedup vs Seq | Correctness |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Sequential** | Small | $10,000$ | $15$ | $1$ | N/A | **0.1290** ms | $1.00\times$ | REFERENCE |
+| **OpenMP ($T=8$)** | Small | $10,000$ | $15$ | $8$ | N/A | **0.0870** ms | $1.48\times$ | PASSED |
+| **OpenMP ($T=24$)** | Small | $10,000$ | $15$ | $24$ | N/A | **0.3120** ms | **0.41x (Slower)** | PASSED |
+| **CUDA Baseline** | Small | $10,000$ | $15$ | $256$ | $0.0164$ ms | **0.0579** ms | $2.23\times$ (Kernel: $7.87\times$) | PASSED |
+| **CUDA Optimized** | Small | $10,000$ | $15$ | $256$ | $0.0340$ ms | **0.1327** ms | **0.97x (Slower)** (Kernel: $3.79\times$) | PASSED |
+| | | | | | | | | |
+| **Sequential** | Medium | $100,000$ | $31$ | $1$ | N/A | **1.6540** ms | $1.00\times$ | REFERENCE |
+| **OpenMP ($T=8$)** | Medium | $100,000$ | $31$ | $8$ | N/A | **0.5650** ms | $2.93\times$ | PASSED |
+| **OpenMP ($T=24$)** | Medium | $100,000$ | $31$ | $24$ | N/A | **0.4160** ms | $3.98\times$ | PASSED |
+| **CUDA Baseline** | Medium | $100,000$ | $31$ | $256$ | $0.1039$ ms | **0.2976** ms | $5.56\times$ (Kernel: $15.92\times$) | PASSED |
+| **CUDA Optimized** | Medium | $100,000$ | $31$ | $256$ | $0.1059$ ms | **0.3258** ms | $5.08\times$ (Kernel: $15.62\times$) | PASSED |
+| | | | | | | | | |
+| **Sequential** | Large | $1,000,000$ | $63$ | $1$ | N/A | **39.5710** ms | $1.00\times$ | REFERENCE |
+| **OpenMP ($T=8$)** | Large | $1,000,000$ | $63$ | $8$ | N/A | **6.9710** ms | $5.68\times$ | PASSED |
+| **OpenMP ($T=24$)** | Large | $1,000,000$ | $63$ | $24$ | N/A | **5.7330** ms | $6.90\times$ | PASSED |
+| **CUDA Baseline** | Large | $1,000,000$ | $63$ | $256$ | $1.6661$ ms | **3.0540** ms | $12.96\times$ (Kernel: $23.75\times$) | PASSED |
+| **CUDA Optimized** | Large | $1,000,000$ | $63$ | $256$ | **1.5797 ms** | **2.8489** ms | **13.89x** (Kernel: **25.05x**) | PASSED |
+
+*(All results logged to [`results/tables/full_benchmark_comparison.csv`](file:///c:/Users/Predator/Desktop/Signal%20Processing/results/tables/full_benchmark_comparison.csv))*
+
+### 2. Key Insights: When Parallelization is Slower
+1. **CPU Over-threading:** On small inputs ($N=10,000$), OpenMP with 24 threads ($0.312$ ms) is **$2.4\times$ slower than sequential** ($0.129$ ms) due to thread dispatch and synchronization overhead.
+2. **GPU PCIe Overhead:** On small inputs, PCIe host-to-device and device-to-host transfers represent over **$74\%$** of total execution time, making end-to-end GPU time slower than sequential CPU time.
+3. **GPU Kernel vs. End-to-End Speedup:** For the Large dataset ($N=1\text{M}, W=63$), the optimized kernel achieves a **$25.05\times$ speedup**, but PCIe transfers limit the end-to-end speedup to **$13.89\times$**, demonstrating Amdahl's Law in heterogeneous computing.
+
+---
+
+## How to Reproduce All Results
+
+```powershell
+# 1. Build all executables
+powershell -ExecutionPolicy Bypass -File .\build.ps1 -Target all
+
+# 2. Generate deterministic benchmark input datasets
+python scripts/generate_inputs.py
+
+# 3. Execute all benchmarks (OpenMP scaling + multi-implementation comparison)
+python benchmarks/run_all_benchmarks.py
+
+# 4. Generate all publication plots
+python scripts/plot_results.py
+```
+
+Generated plots are located in [`results/plots/`](file:///c:/Users/Predator/Desktop/Signal%20Processing/results/plots/):
+- `execution_time_comparison.png`
+- `speedup_comparison.png`
+- `omp_thread_scaling.png`
+- `cuda_breakdown.png`
+- `signal_denoising_demo.png`
+
+Full report materials with placeholders for submission are located in [`report/report_material.md`](file:///c:/Users/Predator/Desktop/Signal%20Processing/report/report_material.md).
+
+---
+
 ## Development Roadmap
 
 - [x] **Step 1:** Environment inspection, mathematical formulation, boundary selection, architecture design, and minimal scaffolding.
 - [x] **Step 2:** Sequential baseline C++ implementation, input signal generator, parameter validation, and correctness verification suite.
 - [x] **Step 3:** OpenMP parallel implementation, thread scalability analysis, and parallel efficiency measurement.
-- [ ] **Step 4:** CUDA GPU implementation (Host-to-Device transfer, kernel execution, Device-to-Host transfer).
-- [ ] **Step 5:** Optimized parallel implementation (Shared memory tiling / halo exchange).
-- [ ] **Step 6:** Comprehensive benchmarking (Small, Medium, Large inputs), performance tables, and speedup plots.
-- [ ] **Step 7:** Final technical report preparation and viva readiness.
+- [x] **Step 4:** CUDA GPU implementation (Host-to-Device transfer, kernel execution, Device-to-Host transfer).
+- [x] **Step 5:** Optimized parallel implementation (Shared memory tiling / halo exchange).
+- [x] **Step 6:** Comprehensive benchmarking (Small, Medium, Large inputs), performance tables, and speedup plots.
+- [x] **Step 7:** Final technical report preparation and viva readiness.
+
 
 
