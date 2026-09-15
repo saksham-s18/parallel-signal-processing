@@ -10,13 +10,11 @@
 | **Assignment** | Programming Assignment 1 |
 | **Application Theme** | Signal Processing |
 | **Problem Title** | 1D Moving-Average Noise Reduction Filter Across Sequential, OpenMP, and CUDA Paradigms |
-| **Group Number** | `[Insert Group Number, e.g., Group 12]` |
+| **Group Number** | `16` |
 | **Group Leader** | Saksham Singh — 2024BCS0070 |
 | **Group Member 2** | Daksh Singh — 2024BCS0042 |
 | **Group Member 3** | Anmol Pipara — 2024BCS0014 |
-| **Semester & Batch** | `[Insert Semester & Batch, e.g., Fall 2026 / Batch 2024]` |
-| **Submission Date** | `[Insert Submission Date]` |
-| **Demonstration Link** | `[Insert Google Drive Link to Video Demo / Project Artifacts]` |
+| **Demonstration Link** | `https://drive.google.com/drive/folders/1i3eLAEA6jXPNDnx8pnbJffigIk-LwEPE?usp=sharing` |
 
 ---
 
