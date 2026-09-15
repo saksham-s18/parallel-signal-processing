@@ -11,9 +11,9 @@
 | **Application Theme** | Signal Processing |
 | **Problem Title** | 1D Moving-Average Noise Reduction Filter Across Sequential, OpenMP, and CUDA Paradigms |
 | **Group Number** | `[Insert Group Number, e.g., Group 12]` |
-| **Group Leader** | `[Insert Group Leader Name & Student ID]` |
-| **Group Member 2** | `[Insert Member 2 Name & Student ID]` |
-| **Group Member 3** | `[Insert Member 3 Name & Student ID]` |
+| **Group Leader** | Saksham Singh — 2024BCS0070 |
+| **Group Member 2** | Daksh Singh — 2024BCS0042 |
+| **Group Member 3** | Anmol Pipara — 2024BCS0014 |
 | **Semester & Batch** | `[Insert Semester & Batch, e.g., Fall 2026 / Batch 2024]` |
 | **Submission Date** | `[Insert Submission Date]` |
 | **Demonstration Link** | `[Insert Google Drive Link to Video Demo / Project Artifacts]` |
@@ -696,6 +696,6 @@ The key findings and architectural recommendations are:
 
 | Role / Position | Student Name | Student ID | Specific Responsibilities & Academic Contributions | Contribution (%) | Signature |
 |:---|:---|:---:|:---|:---:|:---:|
-| **Group Leader** | `[Insert Leader Name]` | `[Insert Student ID]` | Architecture design, CUDA baseline & shared-memory optimization, GPU profiling, correctness verification | `[34% / Placeholder]` | `___________` |
-| **Group Member 2** | `[Insert Member 2 Name]` | `[Insert Student ID]` | Sequential reference baseline, OpenMP multi-core implementation, thread scaling analysis, boundary handling | `[33% / Placeholder]` | `___________` |
-| **Group Member 3** | `[Insert Member 3 Name]` | `[Insert Student ID]` | Input dataset generator, benchmark automation harness, visualization plotting scripts, final report compilation | `[33% / Placeholder]` | `___________` |
+| **Group Leader** | Saksham Singh | 2024BCS0070 | Architecture design, CUDA baseline & shared-memory optimization, GPU profiling, correctness verification | `[To be finalized by group]` | `___________` |
+| **Group Member 2** | Daksh Singh | 2024BCS0042 | Sequential reference baseline, OpenMP multi-core implementation, thread scaling analysis, boundary handling | `[To be finalized by group]` | `___________` |
+| **Group Member 3** | Anmol Pipara | 2024BCS0014 | Input dataset generator, benchmark automation harness, visualization plotting scripts, final report compilation | `[To be finalized by group]` | `___________` |

@@ -36,6 +36,14 @@ Signal Processing/
 └── report/                 # Final assignment report and documentation
 ```
 
+## Project Team
+
+| Role | Member Name | Roll No. |
+|:---|:---|:---:|
+| **Group Leader** | Saksham Singh | 2024BCS0070 |
+| **Group Member 2** | Daksh Singh | 2024BCS0042 |
+| **Group Member 3** | Anmol Pipara | 2024BCS0014 |
+
 ---
 
 ## Environment Profile Summary
