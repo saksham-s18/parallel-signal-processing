@@ -1,6 +1,6 @@
 # PowerShell Build Script for Signal Processing Moving-Average Project
 param (
-    [string]$Target = "all", # options: all, seq, omp, cuda, opt, clean
+    [string]$Target = "all", # options: all, seq, omp, cuda, opt, mpi, mpi-opt, clean
     [string]$Config = "Release"
 )
 
@@ -110,6 +110,62 @@ function Build-Optimized {
     }
 }
 
+function Build-MPI {
+    Write-Host "Compiling Basic MPI Implementation..." -ForegroundColor Cyan
+    if ((Test-Path "src/mpi_basic/main_mpi.cpp") -and (Test-Path "src/mpi_basic/moving_average_mpi.cpp")) {
+        $mpicxx = Get-Command mpicxx -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+        if (-not $mpicxx) {
+            if (Test-Path "C:\msys64\ucrt64\bin\mpicxx.exe") {
+                $mpicxx = "C:\msys64\ucrt64\bin\mpicxx.exe"
+            } else {
+                $mpicxx = "mpicxx"
+            }
+        }
+        $sources = @(
+            "src/mpi_basic/moving_average_mpi.cpp",
+            "src/sequential/moving_average_seq.cpp",
+            "src/mpi_basic/main_mpi.cpp"
+        )
+        $mpiArgs = $CXXFLAGS.Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries) + $sources + @("-o", "bin/moving_average_mpi.exe")
+        & $mpicxx $mpiArgs
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Built bin/moving_average_mpi.exe successfully." -ForegroundColor Green
+        } else {
+            Write-Host "Basic MPI build failed." -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Basic MPI source files not found." -ForegroundColor Yellow
+    }
+}
+
+function Build-MPI-Optimized {
+    Write-Host "Compiling Non-Blocking Optimized MPI Implementation..." -ForegroundColor Cyan
+    if ((Test-Path "src/mpi_optimized/main_mpi_opt.cpp") -and (Test-Path "src/mpi_optimized/moving_average_mpi_opt.cpp")) {
+        $mpicxx = Get-Command mpicxx -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+        if (-not $mpicxx) {
+            if (Test-Path "C:\msys64\ucrt64\bin\mpicxx.exe") {
+                $mpicxx = "C:\msys64\ucrt64\bin\mpicxx.exe"
+            } else {
+                $mpicxx = "mpicxx"
+            }
+        }
+        $sources = @(
+            "src/mpi_optimized/moving_average_mpi_opt.cpp",
+            "src/sequential/moving_average_seq.cpp",
+            "src/mpi_optimized/main_mpi_opt.cpp"
+        )
+        $mpiArgs = $CXXFLAGS.Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries) + $sources + @("-o", "bin/moving_average_mpi_opt.exe")
+        & $mpicxx $mpiArgs
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Built bin/moving_average_mpi_opt.exe successfully." -ForegroundColor Green
+        } else {
+            Write-Host "Optimized MPI build failed." -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Optimized MPI source files not found." -ForegroundColor Yellow
+    }
+}
+
 function Clean-Build {
     Write-Host "Cleaning build artifacts..." -ForegroundColor Cyan
     if (Test-Path "bin") {
@@ -119,16 +175,20 @@ function Clean-Build {
 }
 
 switch ($Target) {
-    "seq"   { Build-Sequential }
-    "omp"   { Build-OpenMP }
-    "cuda"  { Build-CUDA }
-    "opt"   { Build-Optimized }
-    "clean" { Clean-Build }
-    "all"   { 
+    "seq"     { Build-Sequential }
+    "omp"     { Build-OpenMP }
+    "cuda"    { Build-CUDA }
+    "opt"     { Build-Optimized }
+    "mpi"     { Build-MPI }
+    "mpi-opt" { Build-MPI-Optimized }
+    "clean"   { Clean-Build }
+    "all"     { 
         Build-Sequential
         Build-OpenMP
         Build-CUDA
         Build-Optimized
+        Build-MPI
+        Build-MPI-Optimized
     }
     default { Write-Host "Unknown target: $Target" -ForegroundColor Red }
 }
