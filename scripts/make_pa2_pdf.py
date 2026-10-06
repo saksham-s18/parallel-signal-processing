@@ -311,6 +311,7 @@ def generate_pdf(server_port):
         '--headless=new',
         '--disable-gpu',
         '--no-sandbox',
+        '--no-pdf-header-footer',
         '--virtual-time-budget=6000',
         '--run-all-compositor-stages-before-draw',
         '--print-to-pdf=' + PDF_PATH_PA2,
@@ -412,8 +413,31 @@ def verify_pdf(pdf_file):
     print(f"  - Total embedded figure images in PDF: {total_images} (Required: 4)")
     images_ok = (total_images >= 4)
 
+    # Check Drive Link and Header/Footer Date/Time
+    print("\n[CHECK 5] Drive Link & Clean Header/Footer Verification:")
+    new_drive_link = "11teXqjJlCB-jTuv5LUcZallRTcDaSzYy"
+    old_drive_link = "1i3eLAEA6jXPNDnx8pnbJffigIk-LwEPE"
+    
+    new_link_present = new_drive_link in full_doc_text
+    old_link_absent = old_drive_link not in full_doc_text
+    
+    # Check for auto-generated browser header/footer date-time like '10/6/26, 1:31 AM'
+    datetime_matches = re.findall(r'\d{1,2}/\d{1,2}/\d{2,4},\s*\d{1,2}:\d{2}\s*(?:AM|PM)', full_doc_text)
+    header_footer_date_absent = (len(datetime_matches) == 0)
+    
+    # Check MPI timing correction text
+    mpi_correction_text = "Likewise, the parallel MPI execution timings recorded during the dedicated strong-scaling benchmark session"
+    mpi_correction_present = mpi_correction_text in full_doc_text
+
+    print(f"  - New Google Drive Link ({new_drive_link}): {'[OK] PRESENT' if new_link_present else '[FAIL] MISSING'}")
+    print(f"  - Old Google Drive Link ({old_drive_link}): {'[OK] ABSENT' if old_link_absent else '[FAIL] FOUND'}")
+    print(f"  - Auto-generated Date/Time in Header/Footer: {'[OK] ABSENT' if header_footer_date_absent else f'[FAIL] FOUND ({datetime_matches})'}")
+    print(f"  - MPI Timing Variance Correction Paragraph: {'[OK] PRESENT' if mpi_correction_present else '[FAIL] MISSING'}")
+
+    drive_and_header_ok = new_link_present and old_link_absent and header_footer_date_absent and mpi_correction_present
+
     print("\n=======================================================")
-    overall = all_meta_ok and all_sec_ok and all_metrics_ok and images_ok
+    overall = all_meta_ok and all_sec_ok and all_metrics_ok and images_ok and drive_and_header_ok
     print(f" OVERALL PA2 PDF VERIFICATION STATUS: {'SUCCESS [PASSED]' if overall else 'FAILED'}")
     print("=======================================================\n")
     return total_pages, file_size_mb
