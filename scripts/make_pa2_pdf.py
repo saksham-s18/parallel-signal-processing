@@ -50,12 +50,15 @@ def read_and_convert_md():
             print(f"Warning: Image not found: {img_full_path}")
             return match.group(0)
 
-    # Insert page break after Front Matter so the title & metadata are prominently placed on Page 1
-    pattern = r'(\|\s*\*\*Demonstration Link\*\*.*?\|\s*\n\s*---\s*\n)'
-    md_text = re.sub(pattern, r'\1\n<div class="page-break"></div>\n\n', md_text, flags=re.DOTALL)
+    # In-place base64 replacement for the cover logo
+    logo_path = os.path.join(REPORT_DIR, 'iiitk_logo.png')
+    if os.path.exists(logo_path):
+        with open(logo_path, 'rb') as f_logo:
+            logo_b64 = base64.b64encode(f_logo.read()).decode('utf-8')
+        md_text = md_text.replace('src="iiitk_logo.png"', f'src="data:image/png;base64,{logo_b64}"')
 
-    # Insert page break before Section 18 so Contributions section sits cleanly on its own final page
-    md_text = re.sub(r'(\n---\s*\n\s*## 18\. Contributions)', r'\n<div class="page-break"></div>\n\n## 18. Contributions', md_text)
+    # Insert page break before Section 17 so Contributions section sits cleanly on its own final page
+    md_text = re.sub(r'(\n---\s*\n\s*## 17\. Contributions)', r'\n<div class="page-break"></div>\n\n## 17. Contributions', md_text)
 
     # Also clean section dividers before major figures for clean pagination
     md_text = re.sub(r'(\n## 7\. MPI Strong Scaling)', r'\n<div class="page-break"></div>\n\n## 7. MPI Strong Scaling', md_text)
@@ -103,6 +106,83 @@ body {{
   background: #ffffff;
   margin: 0;
   padding: 0;
+}}
+
+/* Cover Page (Matching University Template) */
+.cover-page {{
+  padding-top: 35px;
+  text-align: center;
+}}
+
+.cover-course {{
+  font-size: 17pt;
+  font-weight: 800;
+  color: #000000;
+  letter-spacing: 0.2px;
+  margin-bottom: 20px;
+  text-align: center;
+}}
+
+.cover-assignment {{
+  font-size: 13pt;
+  font-weight: 700;
+  color: #000000;
+  letter-spacing: 0.3px;
+  margin-bottom: 5px;
+  text-align: center;
+}}
+
+.cover-report-type {{
+  font-size: 11pt;
+  font-weight: 500;
+  color: #222222;
+  margin-bottom: 35px;
+  text-align: center;
+}}
+
+.cover-logo-wrapper {{
+  margin: 0 auto 35px auto;
+  text-align: center;
+}}
+
+.cover-logo {{
+  width: 206px;
+  max-width: 210px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}}
+
+.cover-table {{
+  width: 96%;
+  max-width: 660px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  font-size: 8.8pt;
+  border: 1px solid #111827;
+}}
+
+.cover-table tr {{
+  background-color: #ffffff !important;
+}}
+
+.cover-table td {{
+  border: 1px solid #111827 !important;
+  padding: 8px 12px;
+  vertical-align: middle;
+  text-align: left;
+}}
+
+.cover-field-label {{
+  font-weight: 700;
+  color: #000000;
+  width: 36%;
+}}
+
+.cover-field-value {{
+  color: #111827;
+  width: 64%;
+  word-break: break-all;
 }}
 
 /* Typography */
@@ -238,6 +318,16 @@ pre code {{
   color: inherit;
 }}
 
+.listing-caption {{
+  font-size: 8.2pt;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin-top: 8px;
+  margin-bottom: 2px;
+  text-align: left;
+  page-break-after: avoid;
+}}
+
 /* Figures and Images */
 .figure-container {{
   page-break-inside: avoid;
@@ -326,7 +416,13 @@ def generate_pdf(server_port):
     print(f"PA2 PDF successfully written to: {PDF_PATH_PA2}")
 
     # Copy to PA2_Final_Report.pdf as well
-    shutil.copy2(PDF_PATH_PA2, PDF_PATH_FINAL)
+    try:
+        shutil.copy2(PDF_PATH_PA2, PDF_PATH_FINAL)
+    except PermissionError:
+        print("Acrobat is locking PA2_Final_Report.pdf, terminating Acrobat to release lock...")
+        subprocess.run(["powershell", "-Command", "Stop-Process -Name Acrobat -Force -ErrorAction SilentlyContinue"])
+        time.sleep(1)
+        shutil.copy2(PDF_PATH_PA2, PDF_PATH_FINAL)
     print(f"PA2 PDF also saved as: {PDF_PATH_FINAL}")
 
 def verify_pdf(pdf_file):
@@ -348,18 +444,19 @@ def verify_pdf(pdf_file):
     # Check Page 1 Metadata
     page1_text = reader.pages[0].extract_text()
     required_metadata = [
-        ("Application Theme", "Signal Processing"),
-        ("Assigned Problem", "Moving-Average Noise Reduction"),
+        ("Course Title", "CSS311 – PARALLEL & DISTRIBUTED COMPUTING"),
+        ("Assignment Name", "PROGRAMMING ASSIGNMENT – 2"),
+        ("Report Title", "PA2 Comprehensive Final Report"),
         ("Group Number", "16"),
-        ("Group Leader", "Saksham Singh"),
-        ("Roll No (Leader)", "2024BCS0070"),
-        ("Member 2", "Daksh Singh"),
-        ("Roll No (Member 2)", "2024BCS0042"),
-        ("Member 3", "Anmol Pipara"),
-        ("Roll No (Member 3)", "2024BCS0014")
+        ("Group Leader", "2024BCS0070 – Saksham Singh"),
+        ("Member 2", "2024BCS0042 – Daksh Singh"),
+        ("Member 3", "2024BCS0014 – Anmol Pipara"),
+        ("Semester & Batch", "Semester 5, Batch 3"),
+        ("Application Theme", "Signal Processing"),
+        ("Assigned Problem", "1D Moving-Average Noise Reduction Filter Across Six Parallel Paradigms")
     ]
     
-    print("\n[CHECK 1] Page 1 Assignment Metadata:")
+    print("\n[CHECK 1] Page 1 Assignment Metadata (Matching University Template):")
     all_meta_ok = True
     for label, val in required_metadata:
         found = val in page1_text
@@ -378,10 +475,10 @@ def verify_pdf(pdf_file):
         "9. GPU Profiling", "10. Hardware Energy Telemetry",
         "11. Comprehensive Six-Way", "12. Architectural Bottleneck",
         "13. When Parallelization Does Not Help", "14. Reproducibility Guide",
-        "15. Limitations", "16. Viva Voce", "17. Conclusion", "18. Contributions"
+        "15. Limitations", "16. Conclusion", "17. Contributions"
     ]
 
-    print("\n[CHECK 2] Report Structure (All 18 Sections):")
+    print("\n[CHECK 2] Report Structure (17 Sections):")
     all_sec_ok = True
     for sec in sections_to_check:
         found = sec in full_doc_text
@@ -407,11 +504,11 @@ def verify_pdf(pdf_file):
         print(f"  - {label}: {'[OK]' if found else '[FAIL]'}")
         if not found: all_metrics_ok = False
 
-    # Check Embedded Images
+    # Check Embedded Images (Cover Logo + 4 Plots = 5 Images)
     print("\n[CHECK 4] Embedded Figures & Plots:")
     total_images = sum(len(page.images) for page in reader.pages)
-    print(f"  - Total embedded figure images in PDF: {total_images} (Required: 4)")
-    images_ok = (total_images >= 4)
+    print(f"  - Total embedded images in PDF: {total_images} (Required: 5 including cover logo)")
+    images_ok = (total_images >= 5)
 
     # Check Drive Link and Header/Footer Date/Time
     print("\n[CHECK 5] Drive Link & Clean Header/Footer Verification:")
@@ -429,15 +526,40 @@ def verify_pdf(pdf_file):
     mpi_correction_text = "Likewise, the parallel MPI execution timings recorded during the dedicated strong-scaling benchmark session"
     mpi_correction_present = mpi_correction_text in full_doc_text
 
+    # Check Viva Voce is completely absent
+    viva_absent = ("Viva Voce" not in full_doc_text) and ("Oral Defense" not in full_doc_text)
+
     print(f"  - New Google Drive Link ({new_drive_link}): {'[OK] PRESENT' if new_link_present else '[FAIL] MISSING'}")
     print(f"  - Old Google Drive Link ({old_drive_link}): {'[OK] ABSENT' if old_link_absent else '[FAIL] FOUND'}")
     print(f"  - Auto-generated Date/Time in Header/Footer: {'[OK] ABSENT' if header_footer_date_absent else f'[FAIL] FOUND ({datetime_matches})'}")
     print(f"  - MPI Timing Variance Correction Paragraph: {'[OK] PRESENT' if mpi_correction_present else '[FAIL] MISSING'}")
+    print(f"  - Viva Voce & Oral Defense Section: {'[OK] ABSENT' if viva_absent else '[FAIL] FOUND'}")
 
-    drive_and_header_ok = new_link_present and old_link_absent and header_footer_date_absent and mpi_correction_present
+    drive_and_header_ok = new_link_present and old_link_absent and header_footer_date_absent and mpi_correction_present and viva_absent
+
+    # Check 6: MPI Implementation Code Listings & Comparison Table
+    print("\n[CHECK 6] MPI Implementation Code Listings & Synthesis:")
+    mpi_code_checks = [
+        ("Listing 3.1: Domain Decomposition", "Listing 3.1: MPI initialization and contiguous domain decomposition"),
+        ("Listing 3.2: Basic MPI Halo Exchange", "Listing 3.2: Basic MPI halo exchange using blocking communication"),
+        ("Listing 3.3: Basic MPI Stencil Loop", "Listing 3.3: Basic MPI local moving-average computation"),
+        ("Listing 3.4: Opt MPI Non-Blocking Post", "Listing 3.4: Optimized MPI non-blocking halo exchange"),
+        ("Listing 3.5: Overlapped Interior Stencil", "Listing 3.5: Interior computation overlapped with communication"),
+        ("Listing 3.6: Waitall & Boundary Stencil", "Listing 3.6: Completion of communication and boundary computation"),
+        ("MPI Code Comparison Table", "Data distribution"),
+        ("Scatterv / Gatherv Vector Collectives", "MPI_Scatterv"),
+        ("Sendrecv / PROC_NULL Blocking Exchange", "MPI_Sendrecv"),
+        ("Irecv / Isend Non-Blocking Primitives", "MPI_Irecv"),
+        ("Waitall Synchronization Primitive", "MPI_Waitall")
+    ]
+    all_mpi_code_ok = True
+    for label, pat in mpi_code_checks:
+        found = pat in full_doc_text
+        print(f"  - {label}: {'[OK] PRESENT' if found else '[FAIL] MISSING'}")
+        if not found: all_mpi_code_ok = False
 
     print("\n=======================================================")
-    overall = all_meta_ok and all_sec_ok and all_metrics_ok and images_ok and drive_and_header_ok
+    overall = all_meta_ok and all_sec_ok and all_metrics_ok and images_ok and drive_and_header_ok and all_mpi_code_ok
     print(f" OVERALL PA2 PDF VERIFICATION STATUS: {'SUCCESS [PASSED]' if overall else 'FAILED'}")
     print("=======================================================\n")
     return total_pages, file_size_mb

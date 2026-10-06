@@ -1,22 +1,55 @@
+<div class="cover-page">
+  <div class="cover-course">CSS311 – PARALLEL &amp; DISTRIBUTED COMPUTING</div>
+  <div class="cover-assignment">PROGRAMMING ASSIGNMENT – 2</div>
+  <div class="cover-report-type">PA2 Comprehensive Final Report</div>
+
+  <div class="cover-logo-wrapper">
+    <img src="iiitk_logo.png" alt="Indian Institute of Information Technology Kottayam" class="cover-logo" />
+  </div>
+
+  <table class="cover-table">
+    <tbody>
+      <tr>
+        <td class="cover-field-label">Group Number</td>
+        <td class="cover-field-value">16</td>
+      </tr>
+      <tr>
+        <td class="cover-field-label">Group Leader</td>
+        <td class="cover-field-value">2024BCS0070 – Saksham Singh</td>
+      </tr>
+      <tr>
+        <td class="cover-field-label">Group Member 2</td>
+        <td class="cover-field-value">2024BCS0042 – Daksh Singh</td>
+      </tr>
+      <tr>
+        <td class="cover-field-label">Group Member 3</td>
+        <td class="cover-field-value">2024BCS0014 – Anmol Pipara</td>
+      </tr>
+      <tr>
+        <td class="cover-field-label">Semester &amp; Batch Number</td>
+        <td class="cover-field-value">Semester 5, Batch 3</td>
+      </tr>
+      <tr>
+        <td class="cover-field-label">Application Theme</td>
+        <td class="cover-field-value">Signal Processing</td>
+      </tr>
+      <tr>
+        <td class="cover-field-label">Assigned Problem / Title</td>
+        <td class="cover-field-value">1D Moving-Average Noise Reduction Filter Across Six Parallel Paradigms</td>
+      </tr>
+      <tr>
+        <td class="cover-field-label">Google Drive Link</td>
+        <td class="cover-field-value">https://drive.google.com/drive/folders/11teXqjJlCB-jTuv5LUcZallRTcDaSzYy?usp=drive_link</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="page-break"></div>
+
 # Parallel Signal Processing: Moving-Average Noise Reduction
 ## Programming Assignment 2 (PA2) Comprehensive Final Report
 ### Integrating Sequential, OpenMP, CUDA Baseline, CUDA Optimized, Basic MPI, and Optimized MPI Paradigms with Hardware Energy Profiling and Nsight Systems Diagnostics
-
----
-
-## Front Matter: Assignment Information
-
-| Metadata Item | Project Details / Verified Records |
-|:---|:---|
-| **Course** | CSS311: Parallel & Distributed Computing |
-| **Assignment** | Programming Assignment 2 (PA2 Comprehensive Final Report) |
-| **Application Theme** | Signal Processing |
-| **Assigned Problem** | 1D Moving-Average Noise Reduction Filter Across Six Parallel Paradigms |
-| **Group Number** | 16 |
-| **Group Leader** | Saksham Singh — 2024BCS0070 |
-| **Group Member 2** | Daksh Singh — 2024BCS0042 |
-| **Group Member 3** | Anmol Pipara — 2024BCS0014 |
-| **Demonstration Link** | `https://drive.google.com/drive/folders/11teXqjJlCB-jTuv5LUcZallRTcDaSzYy?usp=drive_link` |
 
 ---
 
@@ -72,18 +105,58 @@ All six implementations execute the exact same algorithmic task, consume identic
 
 ## 3. The Six Computing Paradigms & Implementations
 
-```
-                                  +-------------------------------------------------------------+
-                                  |         1D Moving-Average Signal Processing Pipeline         |
-                                  |         y[i] = (1/W) * SUM_{j=-k}^{+k} x[clamped(i+j)]      |
-                                  +-------------------------------------------------------------+
-                                                                 |
-                +------------------------------------------------+-----------------------------------------------+
-                |                                                |                                               |
-  [Shared-Memory CPU Paradigms]                       [Many-Core GPU Paradigms]                     [Distributed-Memory MPI Paradigms]
-  - Sequential (1 Core)                               - CUDA Baseline (Global Memory)               - Basic MPI (Blocking Halo Exchange)
-  - OpenMP (1 to 24 Threads)                          - CUDA Optimized (Shared-Memory Tiling)       - Optimized MPI (Non-Blocking Overlap)
-```
+<div class="figure-container" style="margin: 14px auto 16px auto; text-align: center;">
+<svg width="100%" height="auto" viewBox="0 0 700 215" xmlns="http://www.w3.org/2000/svg" style="max-width: 680px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3b82f6" />
+    </marker>
+  </defs>
+
+  <!-- Root Top Box -->
+  <rect x="175" y="8" width="350" height="52" rx="6" fill="#f8fafc" stroke="#2563eb" stroke-width="1.8" />
+  <text x="350" y="28" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">1D Moving-Average Noise Reduction</text>
+  <text x="350" y="46" font-size="10.5" font-weight="500" fill="#1e40af" text-anchor="middle">y[i] = (1/W) · ∑ x[clamped(i + j)]</text>
+
+  <!-- Connector Lines -->
+  <line x1="350" y1="60" x2="350" y2="82" stroke="#3b82f6" stroke-width="1.8" />
+  <line x1="115" y1="82" x2="585" y2="82" stroke="#3b82f6" stroke-width="1.8" />
+
+  <!-- Branch 1 (Left): Shared-Memory CPU -->
+  <line x1="115" y1="82" x2="115" y2="98" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arrow)" />
+  <rect x="10" y="102" width="210" height="104" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4" />
+  <path d="M 10 108 A 6 6 0 0 1 16 102 L 214 102 A 6 6 0 0 1 220 108 L 220 128 L 10 128 Z" fill="#eff6ff" stroke="#cbd5e1" stroke-width="0.8" />
+  <text x="115" y="120" font-size="11" font-weight="700" fill="#1e3a8a" text-anchor="middle">Shared-Memory CPU</text>
+  <rect x="22" y="136" width="186" height="20" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="115" y="150" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">Sequential (1 Core)</text>
+  <rect x="22" y="161" width="186" height="20" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="115" y="175" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">OpenMP (1–24 Threads)</text>
+  <text x="115" y="196" font-size="8.5" font-style="italic" fill="#64748b" text-anchor="middle">Static Domain Partitioning</text>
+
+  <!-- Branch 2 (Center): Many-Core GPU -->
+  <line x1="350" y1="82" x2="350" y2="98" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arrow)" />
+  <rect x="245" y="102" width="210" height="104" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4" />
+  <path d="M 245 108 A 6 6 0 0 1 251 102 L 449 102 A 6 6 0 0 1 455 102 L 455 128 L 245 128 Z" fill="#eff6ff" stroke="#cbd5e1" stroke-width="0.8" />
+  <text x="350" y="120" font-size="11" font-weight="700" fill="#1e3a8a" text-anchor="middle">Many-Core GPU</text>
+  <rect x="257" y="136" width="186" height="20" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="350" y="150" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">CUDA Baseline (Global Mem)</text>
+  <rect x="257" y="161" width="186" height="20" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="350" y="175" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">CUDA Optimized (Shared Mem)</text>
+  <text x="350" y="196" font-size="8.5" font-style="italic" fill="#64748b" text-anchor="middle">Cooperative SRAM Halo Tiling</text>
+
+  <!-- Branch 3 (Right): Distributed-Memory MPI -->
+  <line x1="585" y1="82" x2="585" y2="98" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#arrow)" />
+  <rect x="480" y="102" width="210" height="104" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.4" />
+  <path d="M 480 108 A 6 6 0 0 1 486 102 L 684 102 A 6 6 0 0 1 690 108 L 690 128 L 480 128 Z" fill="#eff6ff" stroke="#cbd5e1" stroke-width="0.8" />
+  <text x="585" y="120" font-size="11" font-weight="700" fill="#1e3a8a" text-anchor="middle">Distributed-Memory MPI</text>
+  <rect x="492" y="136" width="186" height="20" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="585" y="150" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">Basic MPI (Blocking Halo)</text>
+  <rect x="492" y="161" width="186" height="20" rx="3" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <text x="585" y="175" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">Optimized MPI (Non-Blocking)</text>
+  <text x="585" y="196" font-size="8.5" font-style="italic" fill="#64748b" text-anchor="middle">Interior / Boundary Overlap</text>
+</svg>
+<p class="figure-caption"><strong>Figure 3.1: Architectural Taxonomy of the Six Parallel Moving-Average Filtering Paradigms</strong></p>
+</div>
 
 ### 3.1 Sequential CPU Baseline
 The sequential implementation serves as the foundational algorithmic reference. It iterates sequentially over $i \in [0, N-1]$, accumulating $W$ window elements into a double-precision accumulator and scaling by $\frac{1.0}{W}$.
@@ -166,6 +239,103 @@ In the Basic MPI implementation, processes exchange ghost cells synchronously us
 
 Because `MPI_Sendrecv` blocks until message transfers are buffered or initiated, communication and computation are strictly serialized.
 
+#### 3.5.1 Basic MPI Implementation — Representative Code
+
+The core parallel logic of Version 5 (Basic MPI) is presented below, extracted directly from the actual submitted source files (`src/mpi_basic/moving_average_mpi.cpp` and `src/mpi_basic/main_mpi.cpp`).
+
+**Snippet A & B: MPI Initialization, Domain Decomposition, and Distribution**  
+The input signal is divided into contiguous blocks, with one block assigned to each MPI rank. When the signal length $N$ is not evenly divisible by $P$, the base chunk size is $\lfloor N/P \rfloor$ with a remainder $R = N \pmod P$. The decomposition routine allocates an extra sample to the first $R$ ranks and computes per-rank displacement offsets (`displs`). Because ranks manage non-uniform partition sizes, `MPI_Scatterv` and `MPI_Gatherv` are used instead of assuming equal partition sizes, preventing buffer overflow and memory corruption.
+
+<p class="listing-caption"><strong>Listing 3.1: MPI initialization and contiguous domain decomposition.</strong></p>
+
+```cpp
+// 1. MPI Initialization & Rank Discovery (src/mpi_basic/main_mpi.cpp)
+int rank = 0, worldSize = 1;
+MPI_Init(&argc, &argv);
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+
+// 2. Contiguous 1D Block Decomposition (src/mpi_basic/moving_average_mpi.cpp)
+void computePartition(size_t n, int worldSize,
+                      std::vector<int>& counts, std::vector<int>& displs) {
+    counts.resize(worldSize);
+    displs.resize(worldSize);
+    int base = static_cast<int>(n / static_cast<size_t>(worldSize));
+    int rem  = static_cast<int>(n % static_cast<size_t>(worldSize));
+    int offset = 0;
+    for (int r = 0; r < worldSize; ++r) {
+        counts[r] = base + (r < rem ? 1 : 0);
+        displs[r] = offset;
+        offset += counts[r];
+    }
+}
+
+// 3. Partition Distribution & Result Collection via Vector Collectives
+MPI_Scatterv(sendbuf, counts.data(), displs.data(), MPI_SAMPLE_TYPE,
+             localInput.data(), counts[rank], MPI_SAMPLE_TYPE, 0, comm);
+
+// ... local moving-average computation with halo exchange ...
+
+MPI_Gatherv(localOutput.data(), counts[rank], MPI_SAMPLE_TYPE,
+            recvbuf, counts.data(), displs.data(), MPI_SAMPLE_TYPE, 0, comm);
+```
+
+**Snippet C: Synchronous Blocking Halo Exchange**  
+To evaluate the symmetric moving-average window $W = 2k + 1$ across partition boundaries, adjacent ranks exchange ghost cells. The left halo stores the $k$ boundary samples from rank $r - 1$, while the right halo stores the $k$ boundary samples from rank $r + 1$. Communication occurs exclusively between adjacent 1D linear neighbors. For boundary processes, neighbors are assigned `MPI_PROC_NULL`, which acts as a valid no-op. Physical boundaries are then clamped via nearest-element replication ($x[0]$ on rank 0 and $x[N-1]$ on rank $P-1$). Halo exchange is required because edge elements cannot compute the window average without samples physically residing in adjacent processes' memory.
+
+<p class="listing-caption"><strong>Listing 3.2: Basic MPI halo exchange using blocking communication.</strong></p>
+
+```cpp
+// Extended local buffer allocation with ghost cells (radius k)
+const size_t totalExtended = local_n + 2 * static_cast<size_t>(k);
+std::vector<SampleType> extendedBuf(totalExtended);
+std::memcpy(&extendedBuf[k], localInput, local_n * sizeof(SampleType));
+
+// Cartesian 1D neighbor ranks (MPI_PROC_NULL for domain boundaries)
+int leftNeighbor  = (rank > 0) ? (rank - 1) : MPI_PROC_NULL;
+int rightNeighbor = (rank < worldSize - 1) ? (rank + 1) : MPI_PROC_NULL;
+
+// Shift 1 (Rightward): Send right boundary to rightNeighbor, recv left halo
+MPI_Sendrecv(&extendedBuf[k + local_n - k], k, MPI_SAMPLE_TYPE, rightNeighbor, 101,
+             &extendedBuf[0],              k, MPI_SAMPLE_TYPE, leftNeighbor,  101,
+             comm, MPI_STATUS_IGNORE);
+
+// Shift 2 (Leftward): Send left boundary to leftNeighbor, recv right halo
+MPI_Sendrecv(&extendedBuf[k],           k, MPI_SAMPLE_TYPE, leftNeighbor,  102,
+             &extendedBuf[k + local_n], k, MPI_SAMPLE_TYPE, rightNeighbor, 102,
+             comm, MPI_STATUS_IGNORE);
+
+// Edge-clamping (nearest-element replication) on global signal boundaries
+if (rank == 0) {
+    SampleType edgeVal = extendedBuf[k];
+    for (int j = 0; j < k; ++j) extendedBuf[j] = edgeVal;
+}
+if (rank == worldSize - 1) {
+    SampleType edgeVal = extendedBuf[k + local_n - 1];
+    for (int j = 0; j < k; ++j) extendedBuf[k + local_n + j] = edgeVal;
+}
+```
+
+**Snippet D: Local Moving-Average Computation**  
+Each rank computes its assigned output region using its local data plus halo values. Because ghost cells are populated prior to computation, each rank iterates from $0$ to $N_{\text{local}} - 1$ over the extended buffer without branch instructions.
+
+<p class="listing-caption"><strong>Listing 3.3: Basic MPI local moving-average computation.</strong></p>
+
+```cpp
+// Local moving-average stencil loop across assigned N_local elements
+const double invW = 1.0 / static_cast<double>(windowSize);
+
+for (size_t i = 0; i < local_n; ++i) {
+    double sum = 0.0;
+    // Window centered at extendedBuf[k + i], spanning [i ... i + windowSize - 1]
+    const SampleType* windowStart = &extendedBuf[i];
+    for (int j = 0; j < windowSize; ++j) {
+        sum += static_cast<double>(windowStart[j]);
+    }
+    localOutput[i] = static_cast<SampleType>(sum * invW);
+}
+```
+
 ### 3.6 Optimized MPI: Non-Blocking Halo Exchange with Computation Overlap
 The Optimized MPI implementation decouples communication from computation using non-blocking primitives (`MPI_Irecv` and `MPI_Isend`):
 1. **Asynchronous Communication Post:** Rank $r$ immediately posts non-blocking receives for its left and right ghost regions, followed by non-blocking sends of its local boundary data.
@@ -189,6 +359,116 @@ Timeline: Optimized MPI Overlap Mechanism
 | Compute Left & Right Boundary Domains [0, k-1] & [N_local - k, N_local - 1]                     |
 +-------------------------------------------------------------------------------------------------+
 ```
+
+#### 3.6.1 Optimized MPI Implementation — Non-Blocking Halo Exchange
+
+Version 6 (Optimized MPI) enables communication-computation overlap, extracted directly from the actual submitted source file (`src/mpi_optimized/moving_average_mpi_opt.cpp`).
+
+**Snippet A & B: Asynchronous Non-Blocking Halo Receives and Sends**  
+Non-blocking receives (`MPI_Irecv`) for the left and right halo buffers and non-blocking sends (`MPI_Isend`) for boundary data are posted immediately. The four operations produce `MPI_Request` handles (`reqs[0..3]`), delegating physical data transfer to the network interface or shared-memory IPC subsystem while returning control immediately to the CPU.
+
+<p class="listing-caption"><strong>Listing 3.4: Optimized MPI non-blocking halo exchange.</strong></p>
+
+```cpp
+// Neighbor ranks (MPI_PROC_NULL eliminates boundary branches)
+int leftNeighbor  = (rank > 0) ? (rank - 1) : MPI_PROC_NULL;
+int rightNeighbor = (rank < worldSize - 1) ? (rank + 1) : MPI_PROC_NULL;
+
+MPI_Request reqs[4];
+
+// Post non-blocking receives for incoming left & right halo ghost buffers
+MPI_Irecv(&extendedBuf[0],              k, MPI_SAMPLE_TYPE, leftNeighbor,  201,
+          comm, &reqs[0]);
+MPI_Irecv(&extendedBuf[k + local_n],    k, MPI_SAMPLE_TYPE, rightNeighbor, 202,
+          comm, &reqs[1]);
+
+// Post non-blocking sends of outgoing boundary samples to neighbor ranks
+MPI_Isend(&extendedBuf[k + local_n - k], k, MPI_SAMPLE_TYPE, rightNeighbor, 201,
+          comm, &reqs[2]);
+MPI_Isend(&extendedBuf[k],              k, MPI_SAMPLE_TYPE, leftNeighbor,  202,
+          comm, &reqs[3]);
+```
+
+**Snippet C: Interior Computation Before MPI_Waitall**  
+The optimized version overlaps communication with computation by computing the interior region while the non-blocking halo exchange progresses. Elements $i \in [k, N_{\text{local}} - 1 - k]$ read strictly from locally owned memory (`extendedBuf[k ... local_n + k - 1]`) and never access ghost buffers. This substantial arithmetic workload executes concurrently with network transfers.
+
+<p class="listing-caption"><strong>Listing 3.5: Interior computation overlapped with communication.</strong></p>
+
+```cpp
+// Overlapped interior stencil: Runs while halo messages transfer in background
+int64_t interiorStart = static_cast<int64_t>(k);
+int64_t interiorEnd   = static_cast<int64_t>(local_n) - static_cast<int64_t>(k);
+
+if (interiorEnd > interiorStart) {
+    for (int64_t i = interiorStart; i < interiorEnd; ++i) {
+        double sum = 0.0;
+        const SampleType* windowStart = &extendedBuf[i];
+        for (int j = 0; j < windowSize; ++j) {
+            sum += static_cast<double>(windowStart[j]);
+        }
+        localOutput[i] = static_cast<SampleType>(sum * invW);
+    }
+}
+```
+
+**Snippet D: MPI_Waitall and Boundary Computation**  
+Only the boundary portion must wait for the halo data. Once the interior computation is finished, `MPI_Waitall` synchronizes the four halo requests. If interior compute time exceeds communication latency, `MPI_Waitall` completes with negligible stall time. Each process then evaluates the stencils for its left $[0, k - 1]$ and right $[N_{\text{local}} - k, N_{\text{local}} - 1]$ boundaries using the newly arrived ghost cells.
+
+<p class="listing-caption"><strong>Listing 3.6: Completion of communication and boundary computation.</strong></p>
+
+```cpp
+// Synchronize halo transfers: stalls only if communication > interior compute
+MPI_Waitall(4, reqs, MPI_STATUSES_IGNORE);
+
+// Compute Left Boundary Region: i in [0, min(k, local_n) - 1]
+int64_t leftBoundEnd = std::min(static_cast<int64_t>(k),
+                                static_cast<int64_t>(local_n));
+for (int64_t i = 0; i < leftBoundEnd; ++i) {
+    double sum = 0.0;
+    const SampleType* windowStart = &extendedBuf[i];
+    for (int j = 0; j < windowSize; ++j) {
+        sum += static_cast<double>(windowStart[j]);
+    }
+    localOutput[i] = static_cast<SampleType>(sum * invW);
+}
+
+// Compute Right Boundary Region: i in [max(k, local_n - k), local_n - 1]
+int64_t rightBoundStart = std::max(static_cast<int64_t>(k),
+                                   static_cast<int64_t>(local_n) - static_cast<int64_t>(k));
+for (int64_t i = rightBoundStart; i < static_cast<int64_t>(local_n); ++i) {
+    double sum = 0.0;
+    const SampleType* windowStart = &extendedBuf[i];
+    for (int j = 0; j < windowSize; ++j) {
+        sum += static_cast<double>(windowStart[j]);
+    }
+    localOutput[i] = static_cast<SampleType>(sum * invW);
+}
+```
+
+### 3.7 Comparative MPI Implementation Analysis & Assignment Synthesis
+
+The architectural, algorithmic, and communication characteristics of the two MPI implementations are contrasted below:
+
+| Aspect | Basic MPI | Optimized MPI |
+|:---|:---|:---|
+| **Data distribution** | `MPI_Scatterv` | `MPI_Scatterv` |
+| **Halo exchange** | Blocking | Non-blocking |
+| **Communication** | `MPI_Sendrecv` | `MPI_Isend` / `MPI_Irecv` |
+| **Computation overlap** | No | Yes |
+| **Synchronization** | Blocking exchange | `MPI_Waitall` after interior work |
+| **Main optimization** | Domain decomposition | Communication/computation overlap |
+
+#### Synthesis of Implementation Against Assignment Requirements
+- **Basic MPI (Version 5):**
+  - **Domain Decomposition:** Successfully partitions the 1D input array into contiguous blocks via `computePartition`, distributing non-uniform partitions across ranks using `MPI_Scatterv` and gathering final results with `MPI_Gatherv`.
+  - **Halo Exchange:** Implements blocking point-to-point halo exchange via `MPI_Sendrecv`, utilizing `MPI_PROC_NULL` for boundary safety and applying nearest-element edge clamping.
+  - **Local Moving-Average Computation:** Each process computes its assigned output slice using local samples and halo data.
+  - **Correctness:** Confirmed 100% numerically equivalent against the sequential reference baseline ($L_\infty = 0.00\text{e}+00$, $\text{RMSE} = 0.00\text{e}+00$).
+- **Optimized MPI (Version 6):**
+  - **Non-Blocking Exchange:** Posts asynchronous halo transfers using `MPI_Irecv` and `MPI_Isend` across four communication requests.
+  - **Communication-Computation Overlap:** Segregates local domain into interior and boundary elements, evaluating interior stencils while communication transfers across the interconnect.
+  - **Synchronized Boundary Evaluation:** Calls `MPI_Waitall` only when halo cells are needed, computing boundary stencils after communication completes.
+  - **Measured Overlap Performance:** Validated by fine-grained timing breakdowns in Section 8, showing that overlapping interior computation hides up to 94.1% of communication latency for large signal sizes.
 
 ---
 
@@ -541,23 +821,7 @@ All benchmark logs and tables are written to `results/tables/`.
 
 ---
 
-## 16. Viva Voce & Oral Defense Preparation
-
-### Question 1: Why does absolute efficiency exceed 100% at P=1, 2, 4 in MPI scaling? Does this represent superlinear scaling?
-**Answer:** No, it does NOT represent superlinear algorithmic scaling. The standalone sequential benchmark ran at $35.027$ ms, whereas the single-process MPI executable ($P=1$) executed in $25.248$ ms due to compiler optimization variations in MSYS2 GCC `-O3` loop framing and memory layout. When evaluated self-consistently against the $P=1$ MPI baseline, efficiency is strictly sublinear: $93.8\%$ at $P=2$, $79.6\%$ at $P=4$, and $56.0\%$ at $P=8$.
-
-### Question 2: Why does MPI overlap efficiency drop from 98.7% at P=8 to 22.8% at P=16?
-**Answer:** At $P=8$, each process computes over 125,000 samples. The interior computation window ($0.235$ ms) is long enough to completely hide non-blocking halo exchange latency, resulting in an `MPI_Waitall` stall of only $0.003$ ms. At $P=16$, the partition shrinks to 62,500 samples, narrowing interior compute to $0.134$ ms. Because inter-process message dispatch and kernel scheduling require more time, communication is exposed, forcing `MPI_Waitall` to stall for $0.453$ ms.
-
-### Question 3: How was energy normalized across implementations with different iteration counts?
-**Answer:** Raw session energy reflects differing repetition counts (5 iterations for Sequential, 10 for OpenMP and MPI, 15 for CUDA) chosen to obtain stable hardware sensor readings. Energy was rigorously normalized to Joules per filtering pass: $E_{\text{pass}} = E_{\text{session}} / N_{\text{iterations}}$. This revealed that CUDA Optimized consumed $0.277$ J/pass, compared to $1.098$ J/pass for OpenMP and $2.834$ J/pass for Sequential.
-
-### Question 4: Why do CUDA Baseline and CUDA Optimized exhibit nearly identical kernel runtimes on Large workloads?
-**Answer:** The NVIDIA Ada Lovelace RTX 4050 GPU features a 32 MB hardware L2 cache. At $N=1,000,000$, the input array fits within L2 cache, allowing the baseline kernel's redundant fetches to hit cache rather than DRAM. Consequently, the explicit shared-memory caching in the optimized kernel provides minimal additional latency reduction.
-
----
-
-## 17. Conclusion
+## 16. Conclusion
 
 Programming Assignment 2 provided an extensive empirical exploration across six computational paradigms for 1D moving-average signal filtering. Key conclusions include:
 1. **Numerical Invariance:** All six implementations maintained rigorous numerical equivalence to the sequential reference baseline, achieving $\text{Max Absolute Error} = 0.00\text{e}+00$ across all signal sizes.
@@ -569,7 +833,7 @@ Programming Assignment 2 provided an extensive empirical exploration across six 
 
 ---
 
-## 18. Contributions & Team Responsibilities
+## 17. Contributions & Team Responsibilities
 
 | Team Member | Roll Number | Key Responsibilities & Module Leadership |
 |:---|:---:|:---|
